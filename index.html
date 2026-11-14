@@ -21,6 +21,11 @@
             margin: 0;
             padding: 12px;
             direction: rtl;
+            text-align: right;
+        }
+        body.ltr-mode {
+            direction: ltr;
+            text-align: left;
         }
         .container {
             max-width: 950px;
@@ -59,13 +64,15 @@
         }
         .tabs {
             display: flex;
-            flex-direction: row-reverse;
-            justify-content: flex-end;
+            justify-content: flex-start;
             gap: 8px;
             overflow-x: auto;
             padding-bottom: 10px;
             margin-bottom: 20px;
             scrollbar-width: thin;
+        }
+        .ltr-mode .tabs {
+            flex-direction: row;
         }
         .tabs::-webkit-scrollbar {
             height: 6px;
@@ -118,7 +125,7 @@
             font-weight: bold;
         }
         ul {
-            padding-right: 20px;
+            padding-inline-start: 20px;
             margin: 10px 0;
         }
         li {
@@ -136,7 +143,7 @@
             padding: 12px 15px;
             border-radius: 8px;
             margin-bottom: 10px;
-            border-right: 4px solid var(--accent-color);
+            border-inline-start: 4px solid var(--accent-color);
         }
         .item-box h4 {
             margin: 0 0 5px 0;
@@ -156,7 +163,7 @@
     <div class="header">
         <div class="header-top">
             <button class="lang-btn" onclick="toggleLanguage()" id="langToggle">English</button>
-            <span style="font-size: 0.8rem; color: var(--secondary-text);">تحدي ناسا سبايس أبس 2026 | فريق رقم 8</span>
+            <span style="font-size: 0.8rem; color: var(--secondary-text);" id="teamText">تحدي ناسا سبايس أبس 2026 | فريق رقم 8</span>
         </div>
         <div class="title">
             <h1 id="mainTitle">Agro-Spectra</h1>
@@ -164,15 +171,17 @@
         </div>
     </div>
 
-    <!-- Tabs Navigation (7 Tabs مطابق لصورك) -->
+    <!-- Tabs Navigation (9 Tabs مرتبة تصاعدياً) -->
     <div class="tabs">
         <button class="tab active" onclick="switchTab(0)" id="tab0">1. نظرة عامة</button>
         <button class="tab" onclick="switchTab(1)" id="tab1">2. الخريطة والبيانات</button>
         <button class="tab" onclick="switchTab(2)" id="tab2">3. بيانات ناسا</button>
-        <button class="tab" onclick="switchTab(3)" id="tab3">4. استراتيجيات المحاصيل</button>
-        <button class="tab" onclick="switchTab(4)" id="tab4">5. الأثر والنتائج</button>
-        <button class="tab" onclick="switchTab(5)" id="tab5">6. التحليلات والخرائط</button>
-        <button class="tab" onclick="switchTab(6)" id="tab6">7. التحذيرات والتوصيات</button>
+        <button class="tab" onclick="switchTab(3)" id="tab3">4. الحرارة والرطوبة</button>
+        <button class="tab" onclick="switchTab(4)" id="tab4">5. استراتيجيات المحاصيل</button>
+        <button class="tab" onclick="switchTab(5)" id="tab5">6. الأثر والنتائج</button>
+        <button class="tab" onclick="switchTab(6)" id="tab6">7. التحليلات والخرائط</button>
+        <button class="tab" onclick="switchTab(7)" id="tab7">8. التحذيرات الذكية</button>
+        <button class="tab" onclick="switchTab(8)" id="tab8">9. التوصيات العملية</button>
     </div>
 
     <!-- Tab Contents -->
@@ -182,9 +191,9 @@
             <h2 id="t0Head">نبذة عن المشروع</h2>
             <p id="t0Desc" style="font-size: 1.05rem; line-height: 1.7;">تحويل تدفقات رصد الأرض المعقدة من وكالة ناسا إلى ذكاء زراعي فوري ومفهوم للمزارع.</p>
             
-            <h3 style="margin-top: 25px; color: var(--accent-color);">محطة تحديد الموقع الجغرافي والربط الفضائي</h3>
-            <p>انقر على أي حقل في الخريطة أدناه لجلب إحداثيات الموقع وروبطها الفوري ببيانات ناسا السبعة الحية.</p>
-            <div class="coords-box">
+            <h3 style="margin-top: 25px; color: var(--accent-color);" id="t0SubHead">محطة تحديد الموقع الجغرافي والربط الفضائي</h3>
+            <p id="t0SubDesc">انقر على أي حقل في الخريطة أدناه لجلب إحداثيات الموقع وروبطها الفوري ببيانات ناسا السبعة الحية.</p>
+            <div class="coords-box" id="coordsBox">
                 الإحداثيات المحددة حالياً: خط العرض (16.8894), خط الطول (42.5511) - منطقة جازان
             </div>
         </div>
@@ -200,81 +209,91 @@
         <div class="tab-content hidden" id="content2">
             <h2 id="t2Head">بيانات ناسا المدمجة (NASA Data)</h2>
             <p id="t2Desc">سُصمّمت المنصة لدمج أحدث الأقمار الصناعية والنماذج المناخية:</p>
-            <div class="item-box"><h4>SMAP</h4><p>رطوبة التربة السطحية وتحت السطحية.</p></div>
-            <div class="item-box"><h4>ECOSTRESS</h4><p>تتبع الإجهاد المائي ودرجة حرارة النباتات.</p></div>
-            <div class="item-box"><h4>GPM</h4><p>بيانات الأمطار ومعدلات هطول المياه بدقة عالية.</p></div>
-            <div class="item-box"><h4>Landsat & MODIS</h4><p>مؤشرات الغطاء النباتي (NDVI) والغطاء الأرضي.</p></div>
-            <div class="item-box"><h4>POWER & GRACE</h4><p>الإشعاع الشمسي، درجات الحرارة، والتغيرات في مخزون المياه الجوفية.</p></div>
+            <div class="item-box"><h4 id="n1Title">SMAP</h4><p id="n1Desc">رطوبة التربة السطحية وتحت السطحية.</p></div>
+            <div class="item-box"><h4 id="n2Title">ECOSTRESS</h4><p id="n2Desc">تتبع الإجهاد المائي ودرجة حرارة النباتات.</p></div>
+            <div class="item-box"><h4 id="n3Title">GPM</h4><p id="n3Desc">بيانات الأمطار ومعدلات هطول المياه بدقة عالية.</p></div>
+            <div class="item-box"><h4 id="n4Title">Landsat & MODIS</h4><p id="n4Desc">مؤشرات الغطاء النباتي (NDVI) والغطاء الأرضي.</p></div>
+            <div class="item-box"><h4 id="n5Title">POWER & GRACE</h4><p id="n5Desc">الإشعاع الشمسي، درجات الحرارة، والتغيرات في مخزون المياه الجوفية.</p></div>
         </div>
 
-        <!-- Tab 3: Crop Strategies -->
+        <!-- Tab 3: Temp & Humidity (New Tab) -->
         <div class="tab-content hidden" id="content3">
-            <h2 id="t3Head">استراتيجيات المحاصيل والتكيف</h2>
-            <div class="item-box">
-                <h4>الاستراتيجية أ: الزراعة الذكية مناخياً</h4>
-                <p>مواءمة مواعيد الزراعة مع توقعات هطول الأمطار وموجات الجفاف المرتقبة.</p>
-            </div>
-            <div class="item-box">
-                <h4>الاستراتيجية ب: إدارة الإجهاد الحراري</h4>
-                <p>تفعيل أنظمة التظليل والري التدافعي خلال ذروة ارتفاع درجات الحرارة في جازان.</p>
-            </div>
-            <div class="item-box">
-                <h4>الاستراتيجية ج: مقاومة الجفاف</h4>
-                <p>تطبيق تقنيات الري الدقيق لتوفير 30% من المياه.</p>
-            </div>
+            <h2 id="t3Head">درجة الحرارة والرطوبة الحية</h2>
+            <p id="t3Desc">مراقبة مستمرة لدرجات الحرارة ونسب الرطوبة اللحظية المستمدة من محطات ناسا بخصوص منطقة جازان.</p>
+            <div class="item-box"><h4 id="th1Title">درجة حرارة السطح (Surface Temperature)</h4><p id="th1Desc">32.4 °C - ضمن المعدل الطبيعي الآمن للمحاصيل الحقلية.</p></div>
+            <div class="item-box"><h4 id="th2Title">رطوبة الهواء النسبية (Relative Humidity)</h4><p id="th2Desc">68% - مؤشر جيد لعمليات النتح النباتي والامتصاص.</p></div>
+            <div class="item-box"><h4 id="th3Title">نقطة الندى (Dew Point)</h4><p id="th3Desc">21.5 °C - تقييم دقيّق لاحتمالات التكاثف الصباحي.</p></div>
         </div>
 
-        <!-- Tab 4: Impact & Results -->
+        <!-- Tab 4: Crop Strategies -->
         <div class="tab-content hidden" id="content4">
-            <h2 id="t4Head">الأثر والنتائج (Impact & Results)</h2>
+            <h2 id="t4Head">استراتيجيات المحاصيل والتكيف</h2>
             <div class="item-box">
-                <h4>توفير المياه</h4>
-                <p>توفير ما يصل إلى 30% من استهلاك المياه عبر الجدولة الذكية المستندة لبيانات ناسا.</p>
+                <h4 id="cs1Title">الاستراتيجية أ: الزراعة الذكية مناخياً</h4>
+                <p id="cs1Desc">مواءمة مواعيد الزراعة مع توقعات هطول الأمطار وموجات الجفاف المرتقبة.</p>
             </div>
             <div class="item-box">
-                <h4>تكلفة صفرية للأجهزة</h4>
-                <p>اعتماد كامل على الأقمار الصناعية المفتوحة دون الحاجة لتركيب حساسات أرضية مكلفة.</p>
+                <h4 id="cs2Title">الاستراتيجية ب: إدارة الإجهاد الحراري</h4>
+                <p id="cs2Desc">تفعيل أنظمة التظليل والري التدافعي خلال ذروة ارتفاع درجات الحرارة في جازان.</p>
             </div>
             <div class="item-box">
-                <h4>مراقبة مستمرة 24/7</h4>
-                <p>إنذارات مبكرة للمزارعين قبل وقوع الأزمات المناخية أو الإجهاد النباتي.</p>
+                <h4 id="cs3Title">الاستراتيجية ج: مقاومة الجفاف</h4>
+                <p id="cs3Desc">تطبيق تقنيات الري الدقيق لتوفير 30% من المياه.</p>
             </div>
         </div>
 
-        <!-- Tab 5: Spatial Analytics -->
+        <!-- Tab 5: Impact & Results -->
         <div class="tab-content hidden" id="content5">
-            <h2 id="t5Head">التحليلات المكانية والخرائط (Spatial Analytics)</h2>
+            <h2 id="t5Head">الأثر والنتائج (Impact & Results)</h2>
             <div class="item-box">
-                <h4>تحليل الطبقات المكانية</h4>
-                <p>دمج الطبقات الطيفية لتقييم صحة التربة والخصوبة الحقلية.</p>
+                <h4 id="im1Title">توفير المياه</h4>
+                <p id="im1Desc">توفير ما يصل إلى 30% من استهلاك المياه عبر الجدولة الذكية المستندة لبيانات ناسا.</p>
             </div>
             <div class="item-box">
-                <h4>تحليل التضاريس والارتفاعات</h4>
-                <p>دراسة انحدار الأراضي في جازان لتوجيه مجاري مياه الأمطار والسيول نحو الحقول.</p>
+                <h4 id="im2Title">تكلفة صفرية للأجهزة</h4>
+                <p id="im2Desc">اعتماد كامل على الأقمار الصناعية المفتوحة دون الحاجة لتركيب حساسات أرضية مكلفة.</p>
+            </div>
+            <div class="item-box">
+                <h4 id="im3Title">مراقبة مستمرة 24/7</h4>
+                <p id="im3Desc">إنذارات مبكرة للمزارعين قبل وقوع الأزمات المناخية أو الإجهاد النباتي.</p>
             </div>
         </div>
 
-        <!-- Tab 6: Warnings & Recommendations (7 Warnings & 7 Recommendations) -->
+        <!-- Tab 6: Spatial Analytics -->
         <div class="tab-content hidden" id="content6">
-            <h2 id="t6Head">نظام التحذيرات والتوصيات الذكية (7 تنبيهات و7 توصيات)</h2>
-            
-            <h3 style="color: #ff6b6b; margin-top: 15px;">التحذيرات السبعة (7 Alerts):</h3>
-            <div class="item-box"><h4>6.1 خطر الحرارة الشديدة</h4><p>تخفيف مخاطر درجات الحرارة العالية على المحاصيل الحساسة.</p></div>
-            <div class="item-box"><h4>6.2 خطر الحرائق</h4><p>إنذار مبكر للمناخ الجاف القابل للاشتعال المحيط بالحقول.</p></div>
-            <div class="item-box"><h4>6.3 خطر الفطريات والحشرات</h4><p>اكتشاف الظروف المناخية الرطبة الحاضنة للآفات.</p></div>
-            <div class="item-box"><h4>6.4 خطر الجفاف وشح المياه</h4><p>تحديد فترات العجز المائي المتوقعة بدقة.</p></div>
-            <div class="item-box"><h4>6.5 خطر فقدان العناصر الأساسية في التربة</h4><p>تنبيهات استنزاف العناصر عبر التحليل الطيفي.</p></div>
-            <div class="item-box"><h4>6.6 تحذير فيضانات وتراكم أمطار</h4><p>تتبع الارتفاعات المفاجئة لمناسيب المياه.</p></div>
-            <div class="item-box"><h4>6.7 خطر البرق والصواعق الرعدية</h4><p>رصد تفريغات كهربائية جوية تهدد المواقع المكشوفة.</p></div>
+            <h2 id="t6Head">التحليلات المكانية والخرائط (Spatial Analytics)</h2>
+            <div class="item-box">
+                <h4 id="sp1Title">تحليل الطبقات المكانية</h4>
+                <p id="sp1Desc">دمج الطبقات الطيفية لتقييم صحة التربة والخصوبة الحقلية.</p>
+            </div>
+            <div class="item-box">
+                <h4 id="sp2Title">تحليل التضاريس والارتفاعات</h4>
+                <p id="sp2Desc">دراسة انحدار الأراضي في جازان لتوجيه مجاري مياه الأمطار والسيول نحو الحقول.</p>
+            </div>
+        </div>
 
-            <h3 style="color: #4ecdc4; margin-top: 25px;">التوصيات السبعة (7 Recommendations):</h3>
-            <div class="item-box"><h4>7.1 توصية مكافحة الحرارة العالية</h4><p>تفعيل أنظمة الري المبكر والترطيب السطحي.</p></div>
-            <div class="item-box"><h4>7.2 توصية مواجهة مخاطر الحرائق</h4><p>التأكد من جاهزية وحدات مكافحة الحرائق وحواجز الأمان.</p></div>
-            <div class="item-box"><h4>7.3 توصية علاج الفطريات والحشرات</h4><p>استخدام مبيد حشري زراعي متخصّص فور استشعار الخطر.</p></div>
-            <div class="item-box"><h4>7.4 توصية وقت الري ونقص الرطوبة</h4><p>إعادة توجيه الحصص المائية حسب الأولوية الحرجة للجذور.</p></div>
-            <div class="item-box"><h4>7.5 توصية التسميد وحماية التربة</h4><p>إضافة أسمدة عضوية ومعدنية متوازنة لتعويض النقص.</p></div>
-            <div class="item-box"><h4>7.6 توصية تصريف مياه الفيضانات</h4><p>فتح وتنظيف مجاري التصريف السطحي وحماية الخطوط.</p></div>
-            <div class="item-box"><h4>7.7 توصية حماية مزارع جازان من البرق والصواعق</h4><p>تركيب مانعات الصواعق في الأبراج الزراعية المرتفعة.</p></div>
+        <!-- Tab 7: Warnings (Isolated Tab) -->
+        <div class="tab-content hidden" id="content7">
+            <h2 id="t7Head">التحذيرات الذكية (7 تنبيهات)</h2>
+            <div class="item-box"><h4 id="w1Title">6.1 خطر الحرارة الشديدة</h4><p id="w1Desc">تخفيف مخاطر درجات الحرارة العالية على المحاصيل الحساسة.</p></div>
+            <div class="item-box"><h4 id="w2Title">6.2 خطر الحرائق</h4><p id="w2Desc">إنذار مبكر للمناخ الجاف القابل للاشتعال المحيط بالحقول.</p></div>
+            <div class="item-box"><h4 id="w3Title">6.3 خطر الفطريات والحشرات</h4><p id="w3Desc">اكتشاف الظروف المناخية الرطبة الحاضنة للآفات.</p></div>
+            <div class="item-box"><h4 id="w4Title">6.4 خطر الجفاف وشح المياه</h4><p id="w4Desc">تحديد فترات العجز المائي المتوقعة بدقة.</p></div>
+            <div class="item-box"><h4 id="w5Title">6.5 خطر فقدان العناصر الأساسية في التربة</h4><p id="w5Desc">تنبيهات استنزاف العناصر عبر التحليل الطيفي.</p></div>
+            <div class="item-box"><h4 id="w6Title">6.6 تحذير فيضانات وتراكم أمطار</h4><p id="w6Desc">تتبع الارتفاعات المفاجئة لمناسيب المياه.</p></div>
+            <div class="item-box"><h4 id="w7Title">6.7 خطر البرق والصواعق الرعدية</h4><p id="w7Desc">رصد تفريغات كهربائية جوية تهدد المواقع المكشوفة.</p></div>
+        </div>
+
+        <!-- Tab 8: Recommendations (Isolated Tab) -->
+        <div class="tab-content hidden" id="content8">
+            <h2 id="t8Head">التوصيات العملية (7 توصيات)</h2>
+            <div class="item-box"><h4 id="r1Title">7.1 توصية مكافحة الحرارة العالية</h4><p id="r1Desc">تفعيل أنظمة الري المبكر والترطيب السطحي.</p></div>
+            <div class="item-box"><h4 id="r2Title">7.2 توصية مواجهة مخاطر الحرائق</h4><p id="r2Desc">التأكد من جاهزية وحدات مكافحة الحرائق وحواجز الأمان.</p></div>
+            <div class="item-box"><h4 id="r3Title">7.3 توصية علاج الفطريات والحشرات</h4><p id="r3Desc">استخدام مبيد حشري زراعي متخصّص فور استشعار الخطر.</p></div>
+            <div class="item-box"><h4 id="r4Title">7.4 توصية وقت الري ونقص الرطوبة</h4><p id="r4Desc">إعادة توجيه الحصص المائية حسب الأولوية الحرجة للجذور.</p></div>
+            <div class="item-box"><h4 id="r5Title">7.5 توصية التسميد وحماية التربة</h4><p id="r5Desc">إضافة أسمدة عضوية ومعدنية متوازنة لتعويض النقص.</p></div>
+            <div class="item-box"><h4 id="r6Title">7.6 توصية تصريف مياه الفيضانات</h4><p id="r6Desc">فتح وتنظيف مجاري التصريف السطحي وحماية الخطوط.</p></div>
+            <div class="item-box"><h4 id="r7Title">7.7 توصية حماية مزارع جازان من البرق والصواعق</h4><p id="r7Desc">تركيب مانعات الصواعق في الأبراج الزراعية المرتفعة.</p></div>
         </div>
     </div>
 </div>
@@ -293,7 +312,15 @@
         let lat = e.latlng.lat.toFixed(4);
         let lng = e.latlng.lng.toFixed(4);
         marker.setLatLng([lat, lng]);
-        document.querySelector('.coords-box').innerText = `الإحداثيات المحددة حالياً: خط العرض (${lat}), خط الطول (${lng}) - منطقة جازان`;
+        
+        let coordsText = currentLang === 'ar' 
+            ? `الإحداثيات المحددة حالياً: خط العرض (${lat}), خط الطول (${lng}) - منطقة جازان`
+            : `Selected Coordinates: Latitude (${lat}), Longitude (${lng}) - Jazan Region`;
+        
+        document.getElementById('coordsBox').innerText = coordsText;
+        
+        // ربط مباشر بخرائط جوجل عند النقر الاختياري
+        // window.open(`https://www.google.com/maps?q=${lat},${lng}`, '_blank');
     });
 
     function switchTab(index) {
@@ -312,11 +339,14 @@
     function toggleLanguage() {
         currentLang = currentLang === 'ar' ? 'en' : 'ar';
         const btn = document.getElementById('langToggle');
+        const bodyEl = document.body;
         
         if(currentLang === 'en') {
-            document.documentElement.dir = 'ltr';
-            document.documentElement.lang = 'en';
+            bodyEl.classList.add('ltr-mode');
             btn.innerText = 'العربية';
+            
+            // Header
+            document.getElementById('teamText').innerText = 'NASA Space Apps Challenge 2026 | Team #8';
             document.getElementById('mainTitle').innerText = 'Agro-Spectra';
             document.getElementById('subTitle').innerText = 'Space Agricultural Intelligence & Sustainable Farm Adaptation | NASA Space Apps 2026';
             
@@ -324,13 +354,77 @@
             document.getElementById('tab0').innerText = '1. Overview';
             document.getElementById('tab1').innerText = '2. Map & Data';
             document.getElementById('tab2').innerText = '3. NASA Data';
-            document.getElementById('tab3').innerText = '4. Crop Strategies';
-            document.getElementById('tab4').innerText = '5. Impact & Results';
-            document.getElementById('tab5').innerText = '6. Spatial & Maps';
-            document.getElementById('tab6').innerText = '7. Warnings & Recommendations';
+            document.getElementById('tab3').innerText = '4. Temp & Humidity';
+            document.getElementById('tab4').innerText = '5. Crop Strategies';
+            document.getElementById('tab5').innerText = '6. Impact & Results';
+            document.getElementById('tab6').innerText = '7. Spatial & Maps';
+            document.getElementById('tab7').innerText = '8. Warnings';
+            document.getElementById('tab8').innerText = '9. Recommendations';
 
+            // Tab 0
             document.getElementById('t0Head').innerText = 'About the Project';
             document.getElementById('t0Desc').innerText = 'Transforming complex Earth observation workflows from NASA into immediate, actionable agricultural intelligence for farmers.';
+            document.getElementById('t0SubHead').innerText = 'Geolocation & Space Telemetry Station';
+            document.getElementById('t0SubDesc').innerText = 'Click any field on the map below to retrieve site coordinates and instantly link them with 7 live NASA datasets.';
+            document.getElementById('coordsBox').innerText = 'Selected Coordinates: Latitude (16.8894), Longitude (42.5511) - Jazan Region';
+
+            // Tab 1
+            document.getElementById('t1Head').innerText = 'Interactive Jazan Fields Map';
+            document.getElementById('t1Desc').innerText = 'Live monitoring of soil moisture and vegetation indices using satellite telemetry.';
+
+            // Tab 2
+            document.getElementById('t2Head').innerText = 'Integrated NASA Data';
+            document.getElementById('t2Desc').innerText = 'Designed to integrate state-of-the-art satellite constellations and climate models:';
+            document.getElementById('n1Title').innerText = 'SMAP'; document.getElementById('n1Desc').innerText = 'Surface and root-zone soil moisture telemetry.';
+            document.getElementById('n2Title').innerText = 'ECOSTRESS'; document.getElementById('n2Desc').innerText = 'Tracking plant water stress and canopy temperatures.';
+            document.getElementById('n3Title').innerText = 'GPM'; document.getElementById('n3Desc').innerText = 'High-precision precipitation and rainfall rate data.';
+            document.getElementById('n4Title').innerText = 'Landsat & MODIS'; document.getElementById('n4Desc').innerText = 'Vegetation indices (NDVI) and land cover monitoring.';
+            document.getElementById('n5Title').innerText = 'POWER & GRACE'; document.getElementById('n5Desc').innerText = 'Solar irradiance, surface temperatures, and groundwater storage changes.';
+
+            // Tab 3 (Temp & Humidity)
+            document.getElementById('t3Head').innerText = 'Live Temperature & Humidity';
+            document.getElementById('t3Desc').innerText = 'Continuous telemetry of live temperatures and relative humidity derived from NASA stations for Jazan.';
+            document.getElementById('th1Title').innerText = 'Surface Temperature'; document.getElementById('th1Desc').innerText = '32.4 °C - Within safe optimal range for crops.';
+            document.getElementById('th2Title').innerText = 'Relative Humidity'; document.getElementById('th2Desc').innerText = '68% - Favorable index for transpiration and root absorption.';
+            document.getElementById('th3Title').innerText = 'Dew Point'; document.getElementById('th3Desc').innerText = '21.5 °C - Precise assessment for morning condensation probability.';
+
+            // Tab 4 (Strategies)
+            document.getElementById('t4Head').innerText = 'Crop Strategies & Adaptation';
+            document.getElementById('cs1Title').innerText = 'Strategy A: Climate-Smart Agriculture'; document.getElementById('cs1Desc').innerText = 'Aligning planting schedules with expected precipitation forecasts and drought waves.';
+            document.getElementById('cs2Title').innerText = 'Strategy B: Heat Stress Management'; document.getElementById('cs2Desc').innerText = 'Activating shading and pulse irrigation systems during peak heat hours in Jazan.';
+            document.getElementById('cs3Title').innerText = 'Strategy C: Drought Resistance'; document.getElementById('cs3Desc').innerText = 'Applying precision irrigation techniques to achieve 30% water savings.';
+
+            // Tab 5 (Impact)
+            document.getElementById('t5Head').innerText = 'Impact & Results';
+            document.getElementById('im1Title').innerText = 'Water Conservation'; document.getElementById('im1Desc').innerText = 'Save up to 30% water consumption through intelligent NASA-backed scheduling.';
+            document.getElementById('im2Title').innerText = 'Zero Hardware Cost'; document.getElementById('im2Desc').innerText = 'Complete reliance on open satellite telemetry without costly ground sensor installations.';
+            document.getElementById('im3Title').innerText = '24/7 Continuous Monitoring'; document.getElementById('im3Desc').innerText = 'Early warnings sent to farmers before climate crises or plant stress occur.';
+
+            // Tab 6 (Spatial)
+            document.getElementById('t6Head').innerText = 'Spatial Analytics & Maps';
+            document.getElementById('sp1Title').innerText = 'Spatial Layer Analysis'; document.getElementById('sp1Desc').innerText = 'Integrating spectral layers to assess soil health and field fertility.';
+            document.getElementById('sp2Title').innerText = 'Topography & Elevation Analysis'; document.getElementById('sp2Desc').innerText = 'Studying land slope in Jazan to direct rainwater and runoff channels toward fields.';
+
+            // Tab 7 (Warnings)
+            document.getElementById('t7Head').innerText = 'Smart Warnings (7 Alerts)';
+            document.getElementById('w1Title').innerText = '6.1 Extreme Heat Hazard'; document.getElementById('w1Desc').innerText = 'Mitigate high-temperature risks on sensitive crops.';
+            document.getElementById('w2Title').innerText = '6.2 Fire Hazard'; document.getElementById('w2Desc').innerText = 'Early warning for dry, flammable climate surrounding fields.';
+            document.getElementById('w3Title').innerText = '6.3 Fungal & Pest Hazard'; document.getElementById('w3Desc').innerText = 'Detect humid microclimates favorable for pests.';
+            document.getElementById('w4Title').innerText = '6.4 Drought & Water Scarcity'; document.getElementById('w4Desc').innerText = 'Identify expected water deficit periods precisely.';
+            document.getElementById('w5Title').innerText = '6.5 Soil Nutrient Depletion'; document.getElementById('w5Desc').innerText = 'Element depletion alerts via spectral analysis.';
+            document.getElementById('w6Title').innerText = '6.6 Flood & Rain Accumulation'; document.getElementById('w6Desc').innerText = 'Track sudden surges in water levels.';
+            document.getElementById('w7Title').innerText = '6.7 Lightning & Thunderstorm Hazard'; document.getElementById('w7Desc').innerText = 'Monitor atmospheric electrical discharges threatening open sites.';
+
+            // Tab 8 (Recommendations)
+            document.getElementById('t8Head').innerText = 'Practical Recommendations (7)';
+            document.getElementById('r1Title').innerText = '7.1 Extreme Heat Mitigation'; document.getElementById('r1Desc').innerText = 'Activate early morning irrigation and surface cooling systems.';
+            document.getElementById('r2Title').innerText = '7.2 Fire Hazard Response'; document.getElementById('r2Desc').innerText = 'Ensure readiness of fire suppression units and safety barriers.';
+            document.getElementById('r3Title').innerText = '7.3 Fungal & Pest Treatment'; document.getElementById('r3Desc').innerText = 'Apply specialized agricultural pesticides immediately upon risk detection.';
+            document.getElementById('r4Title').innerText = '7.4 Irrigation Timing & Moisture Deficit'; document.getElementById('r4Desc').innerText = 'Redirect water quotas based on critical root priorities.';
+            document.getElementById('r5Title').innerText = '7.5 Fertilization & Soil Protection'; document.getElementById('r5Desc').innerText = 'Add balanced organic and mineral fertilizers to replenish deficits.';
+            document.getElementById('r6Title').innerText = '7.6 Flood Drainage Management'; document.getElementById('r6Desc').innerText = 'Open and clear surface drainage channels to protect crop lines.';
+            document.getElementById('r7Title').innerText = '7.7 Lightning Protection for Jazan Farms'; document.getElementById('r7Desc').innerText = 'Install lightning rods on elevated agricultural structures.';
+
         } else {
             location.reload();
         }
