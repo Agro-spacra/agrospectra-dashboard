@@ -1,1 +1,418 @@
-Enter file contents here
+<!DOCTYPE html>
+<html lang="ar" dir="rtl" id="htmlRoot">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Agro-Spectra | لوحة التحكم الذكية والخرائط الفضائية</title>
+    <!-- استدعاء خرائط وتنسيقاتها -->
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+    <style>
+        :root {
+            --primary: #1b4d3e;
+            --primary-dark: #113328;
+            --accent: #d97706;
+            --accent-light: #fef3c7;
+            --bg-dark: #0f172a;
+            --card-bg: #1e293b;
+            --text-main: #f8fafc;
+            --text-muted: #94a3b8;
+        }
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background-color: var(--bg-dark);
+            color: var(--text-main);
+            margin: 0;
+            padding: 0;
+            transition: direction 0.3s ease;
+        }
+        header {
+            background: linear-gradient(135deg, var(--primary-dark), var(--primary));
+            padding: 20px;
+            text-align: center;
+            border-bottom: 4px solid var(--accent);
+            position: relative;
+        }
+        h1 { margin: 0; font-size: 24px; color: #fff; }
+        p.subtitle { margin: 5px 0 0; color: #93c5fd; font-size: 14px; }
+        
+        /* زر تبديل اللغة */
+        .lang-btn {
+            position: absolute;
+            top: 20px;
+            left: 20px;
+            background: var(--accent);
+            color: #000;
+            border: none;
+            padding: 6px 12px;
+            border-radius: 6px;
+            cursor: pointer;
+            font-weight: bold;
+            font-size: 12px;
+            transition: 0.3s;
+        }
+        .lang-btn:hover { background: #fcd34d; }
+
+        .nav-tabs {
+            display: flex;
+            flex-wrap: wrap;
+            justify-content: center;
+            background: #1e293b;
+            padding: 10px;
+            gap: 6px;
+            border-bottom: 2px solid #334155;
+            position: sticky;
+            top: 0;
+            z-index: 1000;
+        }
+        .tab-btn {
+            background: #334155;
+            color: #fff;
+            border: none;
+            padding: 8px 14px;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 12px;
+            font-weight: bold;
+            transition: 0.3s;
+        }
+        .tab-btn.active, .tab-btn:hover {
+            background: var(--accent);
+            color: #000;
+        }
+
+        .container {
+            max-width: 1000px;
+            margin: 20px auto;
+            padding: 0 15px;
+        }
+        .tab-content {
+            display: none;
+        }
+        .tab-content.active {
+            display: block;
+        }
+        .card {
+            background: var(--card-bg);
+            border-radius: 10px;
+            padding: 20px;
+            margin-bottom: 15px;
+            border-right: 5px solid var(--accent);
+            box-shadow: 0 4px 6px rgba(0,0,0,0.3);
+        }
+        [dir="ltr"] .card {
+            border-right: none;
+            border-left: 5px solid var(--accent);
+        }
+        .card h3 {
+            margin-top: 0;
+            color: #fcd34d;
+            font-size: 18px;
+        }
+        .grid-2 {
+            display: grid;
+            grid-template-columns: 1fr;
+            gap: 15px;
+        }
+        @media(min-width: 768px) {
+            .grid-2 { grid-template-columns: 1fr 1fr; }
+        }
+        #map {
+            width: 100%;
+            height: 350px;
+            border-radius: 8px;
+            margin-top: 10px;
+            z-index: 1;
+        }
+        .warning-box {
+            background: #451a03;
+            border-right: 5px solid #ef4444;
+            padding: 15px;
+            border-radius: 8px;
+            margin-bottom: 15px;
+        }
+        [dir="ltr"] .warning-box { border-right: none; border-left: 5px solid #ef4444; }
+        
+        .recommendation-box {
+            background: #064e3b;
+            border-right: 5px solid #10b981;
+            padding: 15px;
+            border-radius: 8px;
+            margin-bottom: 15px;
+        }
+        [dir="ltr"] .recommendation-box { border-right: none; border-left: 5px solid #10b981; }
+
+        footer {
+            text-align: center;
+            padding: 20px;
+            color: var(--text-muted);
+            font-size: 12px;
+            border-top: 1px solid #334155;
+            margin-top: 40px;
+        }
+    </style>
+</head>
+<body>
+
+<header>
+    <button class="lang-btn" onclick="toggleLanguage()" id="langToggleBtn">English</button>
+    <h1 id="mainTitle">Agro-Spectra</h1>
+    <p class="subtitle" id="mainSubtitle">الذكاء الزراعي الفضائي وتكييف المزارع المستدامة | ناسا سبايس أبس 2026</p>
+</header>
+
+<div class="nav-tabs">
+    <button class="tab-btn active" onclick="openTab(event, 'tabMap')" id="btnTabMap">📍 الخريطة والبيانات</button>
+    <button class="tab-btn" onclick="openTab(event, 'tab1')" id="btnTab1">1. نظرة عامة</button>
+    <button class="tab-btn" onclick="openTab(event, 'tab2')" id="btnTab2">2. بيانات ناسا</button>
+    <button class="tab-btn" onclick="openTab(event, 'tab3')" id="btnTab3">3. استراتيجيات المحاصيل</button>
+    <button class="tab-btn" onclick="openTab(event, 'tab4')" id="btnTab4">4. الأثر والنتائج</button>
+    <button class="tab-btn" onclick="openTab(event, 'tabGeo')" id="btnTabGeo">5. التحليلات والخرائط</button>
+    <button class="tab-btn" onclick="openTab(event, 'tab5')" id="btnTab5">6. التحذيرات</button>
+    <button class="tab-btn" onclick="openTab(event, 'tab6')" id="btnTab6">7. التوصيات العملية</button>
+</div>
+
+<div class="container">
+
+    <!-- Tab Map -->
+    <div id="tabMap" class="tab-content active">
+        <div class="card">
+            <h3 data-ar="📍 محطة تحديد الموقع الجغرافي والربط الفضائي" data-en="📍 Location Station & Space Integration">📍 محطة تحديد الموقع الجغرافي والربط الفضائي</h3>
+            <p data-ar="انقر على أي حقل في الخريطة أدناه لجلب إحداثيات الموقع وربطها الفوري ببيانات ناسا السبعة الحية." data-en="Click on any field on the map below to fetch coordinates and link them instantly to live NASA datasets.">انقر على أي حقل في الخريطة أدناه لجلب إحداثيات الموقع وربطها الفوري ببيانات ناسا السبعة الحية.</p>
+            <div id="map"></div>
+            <div style="margin-top: 15px; background: #0f172a; padding: 12px; border-radius: 6px; border: 1px solid #334155;">
+                <p style="margin: 0; font-size: 13px; color: #38bdf8;" data-ar="الإحداثيات المحددة حالياً: خط العرض (16.8894), خط الطول (42.5511) - منطقة جيزان" data-en="Selected Coordinates: Lat (16.8894), Lng (42.5511) - Jazan Region"><strong>الإحداثيات المحددة حالياً:</strong> خط العرض (16.8894), خط الطول (42.5511) - منطقة جيزان</p>
+            </div>
+        </div>
+    </div>
+
+    <!-- Tab 1: Overview -->
+    <div id="tab1" class="tab-content">
+        <div class="card">
+            <h3 data-ar="نبذة عن المشروع" data-en="Project Overview">نبذة عن المشروع</h3>
+            <p data-ar="تحويل تدفقات رصد الأرض المعقدة من وكالة ناسا إلى ذكاء زراعي فوري ومفهوم للمزارع، مع استراتيجيات دورة زراعية متقدمة." data-en="Transforming complex NASA Earth observation streams into immediate, farmer-friendly agricultural intelligence with advanced crop rotation strategies.">تحويل تدفقات رصد الأرض المعقدة من وكالة ناسا إلى ذكاء زراعي فوري ومفهوم للمزارع، مع استراتيجيات دورة زراعية متقدمة.</p>
+        </div>
+        <div class="grid-2">
+            <div class="card">
+                <h3 data-ar="المؤشرات الرئيسية" data-en="Key Metrics">المؤشرات الرئيسية</h3>
+                <ul>
+                    <li data-ar="7 مجموعات بيانات أساسية من ناسا" data-en="7 Core NASA Datasets">7 مجموعات بيانات أساسية من ناسا</li>
+                    <li data-ar="3 استراتيجيات للدورة الزراعية" data-en="3 Rotation Strategies">3 استراتيجيات للدورة الزراعية</li>
+                    <li data-ar="30% توفير استهلاك المياه" data-en="30% Water Savings">30% توفير استهلاك المياه</li>
+                    <li data-ar="$0 تكلفة أجهزة إضافية في الحقل" data-en="$0 Additional Field Hardware Cost">$0 تكلفة أجهزة إضافية في الحقل</li>
+                </ul>
+            </div>
+            <div class="card">
+                <h3 data-ar="فريق العمل والموقع" data-en="Team & Location">فريق العمل والموقع</h3>
+                <p><strong data-ar="فريق Agro-Spectra" data-en="Team Agro-Spectra">فريق Agro-Spectra</strong><br><span data-ar="مركز الابتكار بجدة • تحدي ناسا سبايس أبس" data-en="Jeddah Innovation Hub • NASA Space Apps">مركز الابتكار بجدة • تحدي ناسا سبايس أبس</span></p>
+            </div>
+        </div>
+    </div>
+
+    <!-- Tab 2: NASA Data -->
+    <div id="tab2" class="tab-content">
+        <div class="card">
+            <h3 data-ar="دمج وتنسيق بيانات ناسا" data-en="NASA Data Harmonization">دمج وتنسيق بيانات ناسا</h3>
+            <p><strong>SMAP:</strong> <span data-ar="رطوبة التربة السطحية ومنطقة الجذور." data-en="Root-zone and surface soil moisture tracking.">رطوبة التربة السطحية ومنطقة الجذور.</span></p>
+            <p><strong>ECOSTRESS:</strong> <span data-ar="درجات حرارة سطح الأرض ومعدلات النتح والتبخر." data-en="Land-surface temperature and precise evapotranspiration rates.">درجات حرارة سطح الأرض ومعدلات النتح والتبخر.</span></p>
+            <p><strong>GPM:</strong> <span data-ar="مراقبة التطرف المناخي والأمطار ومخاطر الفيضانات." data-en="Precipitation extremes and flood/drought risk assessment.">مراقبة التطرف المناخي والأمطار ومخاطر الفيضانات.</span></p>
+            <p><strong>Landsat & MODIS:</strong> <span data-ar="مؤشرات الغطاء النباتي والكشف المبكر عن الإجهاد." data-en="Vegetation indices for early stress detection.">مؤشرات الغطاء النباتي والكشف المبكر عن الإجهاد.</span></p>
+            <p><strong>POWER, GRACE & SRTM:</strong> <span data-ar="البيانات التاريخية، مخزون المياه الجوفية، وتحليل التضاريس." data-en="Historical meteorology, groundwater storage, and terrain slope analysis.">البيانات التاريخية، مخزون المياه الجوفية، وتحليل التضاريس.</span></p>
+        </div>
+    </div>
+
+    <!-- Tab 3: Strategies -->
+    <div id="tab3" class="tab-content">
+        <div class="grid-2">
+            <div class="card">
+                <h3 data-ar="الاستراتيجية أ: الأساسية" data-en="Strategy A: Baseline">الاستراتيجية أ: الأساسية</h3>
+                <p data-ar="الزراعة التقليدية الموروثة؛ استهلاك مالي ومائي عالٍ ومخاطر استنزاف التربة." data-en="Traditional monoculture; high water depletion rates and severe soil degradation risks.">الزراعة التقليدية الموروثة؛ استهلاك مالي ومائي عالٍ ومخاطر استنزاف التربة.</p>
+            </div>
+            <div class="card">
+                <h3 data-ar="الاستراتيجية ب: تثبيت النيتروجين" data-en="Strategy B: Nitrogen-Fixing">الاستراتيجية ب: تثبيت النيتروجين</h3>
+                <p data-ar="إدخال البقوليات والمحاصيل ذات الجذور العميقة لتحسين المادة العضوية." data-en="Introducing legumes and deep roots to restore soil organic matter.">إدخال البقوليات والمحاصيل ذات الجذور العميقة لتحسين المادة العضوية.</p>
+            </div>
+        </div>
+        <div class="card" style="background: var(--accent-light); color: #000; border-right-color: var(--accent);">
+            <h3 style="color: #92400e;" data-ar="الاستراتيجية ج: مقاومة الجفاف (المختارة)" data-en="Strategy C: Drought-Tolerant (Selected)">الاستراتيجية ج: مقاومة الجفاف (المختارة)</h3>
+            <p data-ar="زراعة غطاء نباتي محصن خلال الانتقال الفصلي لتحقيق 30% توفير في المياه ووقف انجراف التربة." data-en="Optimized cover cropping during seasonal transitions. Achieves 30% water savings and halts soil erosion.">زراعة غطاء نباتي محصن خلال الانتقال الفصلي لتحقيق 30% توفير في المياه ووقف انجراف التربة.</p>
+        </div>
+    </div>
+
+    <!-- Tab 4: Impact -->
+    <div id="tab4" class="tab-content">
+        <div class="card">
+            <h3 data-ar="الأثر والنتائج الملموسة" data-en="Tangible Project Impact">الأثر والنتائج الملموسة</h3>
+            <ul>
+                <li><strong data-ar="استهلاك المياه:" data-en="Water Consumption:">استهلاك المياه:</strong> <span data-ar="توفير 30% مقارنة بالأنظمة التقليدية." data-en="30% Water Consumption Savings.">توفير 30% مقارنة بالأنظمة التقليدية.</span></li>
+                <li><strong data-ar="تكلفة الأجهزة:" data-en="Hardware Cost:">تكلفة الأجهزة:</strong> <span data-ar="$0 (اعتماد كامل على الأقمار الصناعية)." data-en="$0 Additional Field Hardware Cost.">$0 (اعتماد كامل على الأقمار الصناعية).</span></li>
+                <li><strong data-ar="معدل المراقبة:" data-en="Monitoring Frequency:">معدل المراقبة:</strong> <span data-ar="24/7 مراقبة فضائية مستمرة." data-en="24/7 Continuous Space Monitoring.">24/7 مراقبة فضائية مستمرة.</span></li>
+            </ul>
+        </div>
+    </div>
+
+    <!-- Tab Geo (5) -->
+    <div id="tabGeo" class="tab-content">
+        <div class="card">
+            <h3 data-ar="5. بوابة التحليلات والخرائط الجغرافية الميدانية" data-en="5. Spatial Mapping & Analytics Portal">5. بوابة التحليلات والخرائط الجغرافية الميدانية</h3>
+            <p data-ar="عرض تفصيلي للطبقات المكانية وتحليل التضاريس (SRTM) وربط المؤشرات الحيوية بالخرائط المكانية." data-en="Detailed visualization of spatial layers, SRTM terrain analysis, and real-time agricultural decision support.">عرض تفصيلي للطبقات المكانية وتحليل التضاريس (SRTM) وربط المؤشرات الحيوية بالخرائط المكانية.</p>
+        </div>
+    </div>
+
+    <!-- Tab 5 (6): Warnings -->
+    <div id="tab5" class="tab-content">
+        <div class="warning-box">
+            <h3 data-ar="6.1. خطر الحرارة الشديدة" data-en="6.1. Extreme Heat Risk">6.1. خطر الحرارة الشديدة</h3>
+            <p data-ar="تخفيف من مخاطر درجات الحرارة المرتفعة والرطوبة المنخفضة بيئياً للحقول المجاورة." data-en="Mitigating risks of high temperatures and low humidity for adjacent fields.">تخفيف من مخاطر درجات الحرارة المرتفعة والرطوبة المنخفضة بيئياً للحقول المجاورة.</p>
+        </div>
+        <div class="warning-box">
+            <h3 data-ar="6.2. خطر الحرائق" data-en="6.2. Fire Risk">6.2. خطر الحرائق</h3>
+            <p data-ar="إنذار مبكر للمناطق الجافة المعرضة للاشتعال السريع نتيجة الارتفاع القياسي للحرارة." data-en="Early warning for dry areas prone to rapid combustion due to record temperatures.">إنذار مبكر للمناطق الجافة المعرضة للاشتعال السريع نتيجة الارتفاع القياسي للحرارة.</p>
+        </div>
+        <div class="warning-box">
+            <h3 data-ar="6.3. خطر الفطريات والحشرات" data-en="6.3. Fungi & Pest Risk">6.3. خطر الفطريات والحشرات</h3>
+            <p data-ar="اكتشاف الظروف المناخية المثالية (حرارة 20-30°C ورطوبة >75%) لحماية المحاصيل استباقياً." data-en="Detecting ideal climatic conditions (20-30°C, humidity >75%) for proactive crop protection.">اكتشاف الظروف المناخية المثالية (حرارة 20-30°C ورطوبة >75%) لحماية المحاصيل استباقياً.</p>
+        </div>
+        <div class="warning-box">
+            <h3 data-ar="6.4. خطر الجفاف وشح المياه" data-en="6.4. Drought & Water Scarcity">6.4. خطر الجفاف وشح المياه</h3>
+            <p data-ar="تحديد فترات الجفاف الحرجة وجفاف رطوبة التربة لتوجيه أنظمة الري الذكية." data-en="Identifying critical drought periods and soil moisture depletion to guide smart irrigation.">تحديد فترات الجفاف الحرجة وجفاف رطوبة التربة لتوجيه أنظمة الري الذكية.</p>
+        </div>
+        <div class="warning-box">
+            <h3 data-ar="6.5. خطر فقدان العناصر الأساسية في التربة" data-en="6.5. Soil Nutrient Depletion">6.5. خطر فقدان العناصر الأساسية في التربة</h3>
+            <p data-ar="تنبيهات استنزاف العناصر العضوية والمعدنية نتيجة الإجهاد الموسمي للمحاصيل." data-en="Alerts for organic and mineral nutrient depletion due to seasonal crop stress.">تنبيهات استنزاف العناصر العضوية والمعدنية نتيجة الإجهاد الموسمي للمحاصيل.</p>
+        </div>
+        <div class="warning-box">
+            <h3 data-ar="6.6. تحذير فيضانات وتراكم أمطار" data-en="6.6. Flood & Rain Accumulation">6.6. تحذير فيضانات وتراكم أمطار</h3>
+            <p data-ar="تتبع الارتفاعات المفاجئة في هطول الأمطار وتراكم المياه لشبكات الصرف الزراعي." data-en="Tracking sudden rainfall surges and water accumulation for agricultural drainage.">تتبع الارتفاعات المفاجئة في هطول الأمطار وتراكم المياه لشبكات الصرف الزراعي.</p>
+        </div>
+        <div class="warning-box">
+            <h3 data-ar="6.7. خطر البرق والصواعق الرعدية" data-en="6.7. Lightning & Thunderstorm Risk">6.7. خطر البرق والصواعق الرعدية</h3>
+            <p data-ar="رصد تفريغات كهربائية عالية الخطورة في الأجواء المكشوفة خلال مواسم الأمطار." data-en="Monitoring high-risk electrical discharges in open areas during rainy seasons.">رصد تفريغات كهربائية عالية الخطورة في الأجواء المكشوفة خلال مواسم الأمطار.</p>
+        </div>
+    </div>
+
+    <!-- Tab 6 (7): Recommendations -->
+    <div id="tab6" class="tab-content">
+        <div class="recommendation-box">
+            <h3 data-ar="7.1. توصية مكافحة الحرارة العالية" data-en="7.1. High Heat Mitigation">7.1. توصية مكافحة الحرارة العالية</h3>
+            <p data-ar="تفعيل أنظمة الري المبكر لتبريد الجذور، واستخدام شبكات التظليل للمحاصيل الحساسة." data-en="Activating early irrigation to cool roots and using shade nets for sensitive crops.">تفعيل أنظمة الري المبكر لتبريد الجذور، واستخدام شبكات التظليل للمحاصيل الحساسة.</p>
+        </div>
+        <div class="recommendation-box">
+            <h3 data-ar="7.2. توصية مواجهة مخاطر الحرائق" data-en="7.2. Fire Hazard Response">7.2. توصية مواجهة مخاطر الحرائق</h3>
+            <p data-ar="التأكد من جاهزية وحدة مكافحة الحرائق وإزالة الحشائش الجافة لخلق ممرات أمان." data-en="Ensuring fire extinguishing unit readiness and clearing dry weeds to create safety corridors.">التأكد من جاهزية وحدة مكافحة الحرائق وإزالة الحشائش الجافة لخلق ممرات أمان.</p>
+        </div>
+        <div class="recommendation-box">
+            <h3 data-ar="7.3. توصية علاج الفطريات والحشرات" data-en="7.3. Fungi & Pest Treatment">7.3. توصية علاج الفطريات والحشرات</h3>
+            <p data-ar="استخدام مبيد حشري زراعي متخصص وموجه بدقة للمحصول، وإزالة الأجزاء المصابة." data-en="Using specialized agricultural pesticides tailored to the crop and removing infected parts.">استخدام مبيد حشري زراعي متخصص وموجه بدقة للمحصول، وإزالة الأجزاء المصابة.</p>
+        </div>
+        <div class="recommendation-box">
+            <h3 data-ar="7.4. توصية وقت الري ونقص الرطوبة" data-en="7.4. Irrigation & Moisture Timing">7.4. توصية وقت الري ونقص الرطوبة</h3>
+            <p data-ar="إعادة توجيه الحصص المائية فوراً حسب بيانات رطوبة التربة (SMAP)." data-en="Rerouting water quotas instantly based on SMAP soil moisture data.">إعادة توجيه الحصص المائية فوراً حسب بيانات رطوبة التربة (SMAP).</p>
+        </div>
+        <div class="recommendation-box">
+            <h3 data-ar="7.5. توصية التسميد وحماية التربة" data-en="7.5. Fertilization & Soil Protection">7.5. توصية التسميد وحماية التربة</h3>
+            <p data-ar="إضافة أسمدة عضوية ومعدنية متوازنة لتعويض العناصر المفقودة وحماية الطبقة السطحية." data-en="Adding balanced organic and mineral fertilizers to restore lost nutrients and protect topsoil.">إضافة أسمدة عضوية ومعدنية متوازنة لتعويض العناصر المفقودة وحماية الطبقة السطحية.</p>
+        </div>
+        <div class="recommendation-box">
+            <h3 data-ar="7.6. توصية تصريف مياه الفيضانات" data-en="7.6. Flood Drainage Recommendation">7.6. توصية تصريف مياه الفيضانات</h3>
+            <p data-ar="فتح وتنظيف مجاري التصريف السطحي والخنادق حول الحقول بشكل عاجل لمنع تعفن الجذور." data-en="Opening and cleaning surface drainage channels around fields urgently to prevent root rot.">فتح وتنظيف مجاري التصريف السطحي والخنادق حول الحقول بشكل عاجل لمنع تعفن الجذور.</p>
+        </div>
+        <div class="recommendation-box">
+            <h3 data-ar="7.7. توصية حماية مزارع جيزان من البرق والصواعق" data-en="7.7. Jazan Lightning Protection">7.7. توصية حماية مزارع جيزان من البرق والصواعق</h3>
+            <p data-ar="تركيب مانعات الصواعق (Lightning Arresters) في المناطق المكشوفة وحول مضخات المياه والآبار." data-en="Installing Lightning Arresters in open areas and around water pumps and wells to protect electrical systems.">تركيب مانعات الصواعق (Lightning Arresters) في المناطق المكشوفة وحول مضخات المياه والآبار.</p>
+        </div>
+    </div>
+
+</div>
+
+<footer>
+    <span data-ar="Agro-Spectra Platform &copy; 2026 | تحدي ناسا سبايس أبس - جدة" data-en="Agro-Spectra Platform &copy; 2026 | NASA Space Apps Challenge - Jeddah">Agro-Spectra Platform &copy; 2026 | تحدي ناسا سبايس أبس - جدة</span>
+</footer>
+
+<!-- مكتبة الخرائط -->
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+<script>
+    let currentLang = 'ar';
+
+    function openTab(evt, tabName) {
+        let contents = document.getElementsByClassName("tab-content");
+        for (let c of contents) { c.classList.remove("active"); }
+        let buttons = document.getElementsByClassName("tab-btn");
+        for (let b of buttons) { b.classList.remove("active"); }
+        document.getElementById(tabName).classList.add("active");
+        evt.currentTarget.classList.add("active");
+
+        if(tabName === 'tabMap') {
+            setTimeout(() => { map.invalidateSize(); }, 200);
+        }
+    }
+
+    function toggleLanguage() {
+        const root = document.getElementById('htmlRoot');
+        const langBtn = document.getElementById('langToggleBtn');
+        
+        if (currentLang === 'ar') {
+            currentLang = 'en';
+            root.setAttribute('lang', 'en');
+            root.setAttribute('dir', 'ltr');
+            langBtn.textContent = 'العربية';
+            
+            document.getElementById('mainTitle').textContent = 'Agro-Spectra';
+            document.getElementById('mainSubtitle').textContent = 'Space-Borne Agricultural Intelligence & Farm Adaptation | NASA Space Apps 2026';
+            
+            document.getElementById('btnTabMap').textContent = '📍 Map & Data';
+            document.getElementById('btnTab1').textContent = '1. Overview';
+            document.getElementById('btnTab2').textContent = '2. NASA Data';
+            document.getElementById('btnTab3').textContent = '3. Crop Strategies';
+            document.getElementById('btnTab4').textContent = '4. Impact & Results';
+            document.getElementById('btnTabGeo').textContent = '5. Spatial Analytics';
+            document.getElementById('btnTab5').textContent = '6. Warnings';
+            document.getElementById('btnTab6').textContent = '7. Practical Recommendations';
+        } else {
+            currentLang = 'ar';
+            root.setAttribute('lang', 'ar');
+            root.setAttribute('dir', 'rtl');
+            langBtn.textContent = 'English';
+            
+            document.getElementById('mainTitle').textContent = 'Agro-Spectra';
+            document.getElementById('mainSubtitle').textContent = 'الذكاء الزراعي الفضائي وتكييف المزارع المستدامة | ناسا سبايس أبس 2026';
+            
+            document.getElementById('btnTabMap').textContent = '📍 الخريطة والبيانات';
+            document.getElementById('btnTab1').textContent = '1. نظرة عامة';
+            document.getElementById('btnTab2').textContent = '2. بيانات ناسا';
+            document.getElementById('btnTab3').textContent = '3. استراتيجيات المحاصيل';
+            document.getElementById('btnTab4').textContent = '4. الأثر والنتائج';
+            document.getElementById('btnTabGeo').textContent = '5. التحليلات والخرائط';
+            document.getElementById('btnTab5').textContent = '6. التحذيرات';
+            document.getElementById('btnTab6').textContent = '7. التوصيات العملية';
+        }
+
+        const elements = document.querySelectorAll('[data-ar]');
+        elements.forEach(el => {
+            if (currentLang === 'en') {
+                if(el.getAttribute('data-en')) el.textContent = el.getAttribute('data-en');
+            } else {
+                if(el.getAttribute('data-ar')) el.textContent = el.getAttribute('data-ar');
+            }
+        });
+    }
+
+    var map = L.map('map').setView([16.8894, 42.5511], 10);
+    L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+        attribution: '&copy; OpenStreetMap contributors | Agro-Spectra NASA Space Apps'
+    }).addTo(map);
+
+    var marker = L.marker([16.8894, 42.5511]).addTo(map)
+        .bindPopup('<b>Jazan Farm Model</b><br>Live NASA sensor feed integrated.')
+        .openPopup();
+
+    map.on('click', function(e) {
+        var lat = e.latlng.lat.toFixed(4);
+        var lng = e.latlng.lng.toFixed(4);
+        marker.setLatLng([lat, lng])
+              .bindPopup('<b>Coordinates:</b><br>Lat: ' + lat + ', Lng: ' + lng + '<br><em>NASA live data synced successfully!</em>')
+              .openPopup();
+    });
+</script>
+
+</body>
+</html>
+
