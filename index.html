@@ -1,70 +1,61 @@
 <!DOCTYPE html>
-<html lang="ar" dir="rtl" id="htmlRoot">
+<html lang="ar" dir="rtl">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Agro-Spectra | NASA Space Apps 2026</title>
+    <title>Agro-Spectra | نظام الاستشعار الزراعي</title>
     <!-- Leaflet CSS -->
     <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
     <style>
         :root {
-            --bg-color: #0b132b;
-            --card-bg: #1c2541;
-            --text-primary: #ffffff;
-            --text-secondary: #94a3b8;
-            --accent-green: #2ec4b6;
-            --accent-orange: #e07a5f;
-            --border-color: #3a506b;
+            --bg-color: #0d1b2a;
+            --card-bg: #1b263b;
+            --accent-color: #00b4d8;
+            --text-color: #e0fbfc;
+            --secondary-text: #8d99ae;
         }
         body {
             font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
             background-color: var(--bg-color);
-            color: var(--text-primary);
+            color: var(--text-color);
             margin: 0;
-            padding: 0;
+            padding: 15px;
             direction: rtl;
         }
         .container {
-            max-width: 1200px;
+            max-width: 800px;
             margin: 0 auto;
-            padding: 20px;
         }
-        header {
+        .header {
+            background-color: var(--card-bg);
+            padding: 20px;
+            border-radius: 12px;
             display: flex;
             justify-content: space-between;
             align-items: center;
-            background: var(--card-bg);
-            padding: 15px 25px;
-            border-radius: 12px;
-            border: 1px solid var(--border-color);
             margin-bottom: 20px;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.3);
         }
-        .logo-area h1 {
-            margin: 0;
+        .title h1 {
             font-size: 1.4rem;
-            color: var(--accent-green);
+            margin: 0;
+            color: var(--accent-color);
         }
-        .controls {
-            display: flex;
-            gap: 10px;
-            align-items: center;
+        .badge {
+            background-color: rgba(0, 180, 216, 0.1);
+            border: 1px solid var(--accent-color);
+            padding: 5px 12px;
+            border-radius: 20px;
+            font-size: 0.85rem;
         }
-        .btn-lang {
-            background: var(--accent-green);
-            color: #0b132b;
+        .lang-btn {
+            background-color: var(--accent-color);
+            color: var(--bg-color);
             border: none;
             padding: 8px 16px;
             border-radius: 8px;
             font-weight: bold;
             cursor: pointer;
-        }
-        .badge-nasa {
-            background: #0f172a;
-            color: #38bdf8;
-            padding: 8px 12px;
-            border-radius: 8px;
-            font-size: 0.9rem;
-            border: 1px solid #0284c7;
         }
         .tabs {
             display: flex;
@@ -73,231 +64,251 @@
             padding-bottom: 10px;
             margin-bottom: 20px;
         }
-        .tab-btn {
-            background: var(--card-bg);
-            color: var(--text-secondary);
-            border: 1px solid var(--border-color);
-            padding: 10px 18px;
+        .tab {
+            background-color: var(--card-bg);
+            color: var(--secondary-text);
+            border: none;
+            padding: 10px 16px;
             border-radius: 8px;
-            cursor: pointer;
             white-space: nowrap;
-            transition: all 0.3s ease;
+            cursor: pointer;
+            font-size: 0.9rem;
+            transition: 0.3s;
         }
-        .tab-btn.active {
-            background: var(--accent-green);
-            color: #0b132b;
+        .tab.active {
+            background-color: var(--accent-color);
+            color: var(--bg-color);
             font-weight: bold;
-            border-color: var(--accent-green);
         }
-        .tab-content {
-            display: none;
-            background: var(--card-bg);
-            padding: 25px;
+        .content-card {
+            background-color: var(--card-bg);
+            padding: 20px;
             border-radius: 12px;
-            border: 1px solid var(--border-color);
+            box-shadow: 0 4px 6px rgba(0,0,0,0.3);
+            min-height: 300px;
         }
-        .tab-content.active {
-            display: block;
+        .hidden {
+            display: none;
         }
         #map {
-            height: 400px;
-            border-radius: 10px;
-            margin-top: 15px;
-            border: 1px solid var(--border-color);
-        }
-        .metric-grid {
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
-            gap: 15px;
+            height: 350px;
+            border-radius: 8px;
             margin-top: 15px;
         }
-        .metric-card {
-            background: #0f172a;
-            padding: 15px;
-            border-radius: 10px;
-            border: 1px solid var(--border-color);
+        ul {
+            padding-right: 20px;
         }
-        .metric-card h3 {
-            margin: 0 0 10px 0;
-            color: var(--text-secondary);
-            font-size: 0.95rem;
-        }
-        .metric-value {
-            font-size: 1.5rem;
-            font-weight: bold;
-            color: var(--accent-green);
+        li {
+            margin-bottom: 10px;
+            line-height: 1.6;
         }
     </style>
 </head>
 <body>
 
-    <div class="container">
-        <!-- رأس المنصة -->
-        <header>
-            <div class="logo-area">
-                <h1 id="titleText">Agro-Spectra | نظام الاستشعار الزراعي</h1>
-            </div>
-            <div class="controls">
-                <div class="badge-nasa" id="nasaStatus">NASA POWER API متصل</div>
-                <button class="btn-lang" onclick="toggleLanguage()" id="langBtn">EN</button>
-            </div>
-        </header>
-
-        <!-- شريط التبويبات الثمانية -->
-        <div class="tabs">
-            <button class="tab-btn active" onclick="switchTab(0)" id="t0">الخريطة والبيانات</button>
-            <button class="tab-btn" onclick="switchTab(1)" id="t1">نظرة عامة</button>
-            <button class="tab-btn" onclick="switchTab(2)" id="t2">بيانات ناسا</button>
-            <button class="tab-btn" onclick="switchTab(3)" id="t3">استراتيجيات المحاصيل</button>
-            <button class="tab-btn" onclick="switchTab(4)" id="t4">الأثر البيئي</button>
-            <button class="tab-btn" onclick="switchTab(5)" id="t5">التحليلات المكانية</button>
-            <button class="tab-btn" onclick="switchTab(6)" id="t6">التحذيرات (7)</button>
-            <button class="tab-btn" onclick="switchTab(7)" id="t7">التوصيات (7)</button>
+<div class="container">
+    <!-- Header -->
+    <div class="header">
+        <div>
+            <button class="lang-btn" onclick="toggleLanguage()" id="langToggle">EN</button>
+            <span class="badge" id="apiStatus">NASA POWER API متصل</span>
         </div>
-
-        <!-- محتوى التبويبات -->
-        <div id="tab0" class="tab-content active">
-            <h2 id="mapHeader">الخريطة التفاعلية لحقول جازان</h2>
-            <p id="mapDesc">رصد مباشر لرطوبة التربة ومؤشرات الغطاء النباتي بناءً على بيانات الأقمار الصناعية.</p>
-            <div id="map"></div>
-        </div>
-
-        <div id="tab1" class="tab-content">
-            <h2 id="overviewHeader">الحالة العامة للحقل</h2>
-            <div class="metric-grid">
-                <div class="metric-card">
-                    <h3 id="c1Title">الحالة المثالية</h3>
-                    <div class="metric-value" style="color: #2ec4b6;">Optimal</div>
-                </div>
-                <div class="metric-card">
-                    <h3 id="c2Title">رطوبة التربة الحالية</h3>
-                    <div class="metric-value">24.5%</div>
-                </div>
-                <div class="metric-card">
-                    <h3 id="c3Title">مؤشر الغطاء النباتي (NDVI)</h3>
-                    <div class="metric-value">0.78 (ممتاز)</div>
-                </div>
-            </div>
-        </div>
-
-        <div id="tab2" class="tab-content">
-            <h2>NASA POWER & SMAP Data</h2>
-            <p id="nasaDescText">دمج بيانات الإشعاع الشمسي، درجات الحرارة والرطوبة السطحية من وكالة ناسا.</p>
-        </div>
-
-        <div id="tab3" class="tab-content">
-            <h2 id="stratHeader">استراتيجيات الحفاظ على المياه</h2>
-            <p id="stratDescText">تطبيق تقنيات الري الذكي المعتمدة على استشعار الرطوبة الفضائية.</p>
-        </div>
-
-        <div id="tab4" class="tab-content">
-            <h2 id="impactHeader">الأثر الاقتصادي والبيئي</h2>
-            <p id="impactDescText">توفير استهلاك المياه بنسبة تصل إلى 30% وخفض الانبعاثات الكربونية.</p>
-        </div>
-
-        <div id="tab5" class="tab-content">
-            <h2 id="spatialHeader">التحليلات المكانية المتقدمة</h2>
-            <p id="spatialDescText">تحليل تضاريس وخصائص التربة في منطقة جازان الزراعية.</p>
-        </div>
-
-        <div id="tab6" class="tab-content">
-            <h2 id="warnHeader">التحذيرات الذكية (7 تنبيهات)</h2>
-            <ul>
-                <li>تحذير الإجهاد الحراري وارتفاع درجات الحرارة.</li>
-                <li>تنبيه انخفاض الرطوبة المفاجئ في نطاق الجذور.</li>
-                <li>مراقبة ملوحة التربة وتقلبات التبخر والتنضح.</li>
-            </ul>
-        </div>
-
-        <div id="tab7" class="tab-content">
-            <h2 id="recHeader">التوصيات العملية (7 توصيات)</h2>
-            <ul>
-                <li>جدولة الري خلال ساعات الصباح الباكر لتقليل الفاقد تبخراً.</li>
-                <li>تفعيل أنظمة التغطية العضوية للحفاظ على رطوبة التربة.</li>
-                <li>الاستفادة من تنبؤات ناسا للري المسبق قبل موجات الجفاف.</li>
-            </ul>
+        <div class="title" style="text-align: left;">
+            <h1 id="mainTitle">Agro-Spectra | نظام الاستشعار الزراعي</h1>
+            <span style="font-size: 0.8rem; color: var(--secondary-text);" id="subTitle">فريق رقم 8 | تحدي ناسا جازان 2026</span>
         </div>
     </div>
 
-    <!-- Leaflet JS -->
-    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
-    <script>
-        // إعداد الخريطة
-        var map = L.map('map').setView([16.8894, 42.5511], 10);
-        L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
-            attribution: '&copy; OpenStreetMap contributors'
-        }).addTo(map);
+    <!-- Tabs Navigation (8 Tabs) -->
+    <div class="tabs">
+        <button class="tab active" onclick="switchTab(0)" id="tab0">نظرة عامة</button>
+        <button class="tab" onclick="switchTab(1)" id="tab1">الخريطة والبيانات</button>
+        <button class="tab" onclick="switchTab(2)" id="tab2">بيانات ناسا</button>
+        <button class="tab" onclick="switchTab(3)" id="tab3">استراتيجيات المحاصيل</button>
+        <button class="tab" onclick="switchTab(4)" id="tab4">التحليلات المكانية</button>
+        <button class="tab" onclick="switchTab(5)" id="tab5">التحذيرات</button>
+        <button class="tab" onclick="switchTab(6)" id="tab6">التوصيات</button>
+        <button class="tab" onclick="switchTab(7)" id="tab7">آخر الأخبار</button>
+    </div>
 
-        L.marker([16.8894, 42.5511]).addTo(map)
-            .bindPopup('حقل نموذج جازان - Agro-Spectra')
-            .openPopup();
+    <!-- Tab Contents -->
+    <div class="content-card">
+        <!-- Tab 0: Overview -->
+        <div class="tab-content" id="content0">
+            <h2 id="t0Head">الحالة العامة للحقل</h2>
+            <div style="background: rgba(0,180,216,0.05); padding: 15px; border-radius: 8px; margin-bottom: 10px;">
+                <h4 style="margin:0 0 5px 0; color: var(--accent-color);" id="t0Opt">الحالة المثالية (Optimal)</h4>
+                <p style="margin:0; font-size:0.9rem;" id="t0OptDesc">كفاءة النمو والتمثيل الضوئي في ذروتها</p>
+            </div>
+            <div style="background: rgba(0,180,216,0.05); padding: 15px; border-radius: 8px; margin-bottom: 10px;">
+                <h4 style="margin:0 0 5px 0;" id="t0Soil">رطوبة التربة الحالية: 24.5%</h4>
+                <p style="margin:0; font-size:0.9rem; color: var(--secondary-text);" id="t0SoilDesc">ضمن النطاق الآمن لامتصاص الجذور</p>
+            </div>
+            <div style="background: rgba(0,180,216,0.05); padding: 15px; border-radius: 8px;">
+                <h4 style="margin:0 0 5px 0;" id="t0Ndvi">مؤشر الغطاء النباتي (NDVI): 0.78 (ممتاز)</h4>
+                <p style="margin:0; font-size:0.9rem; color: var(--secondary-text);" id="t0NdviDesc">بناءً على بيانات الأقمار الصناعية</p>
+            </div>
+        </div>
 
-        // نظام التبويبات
-        function switchTab(index) {
-            const contents = document.querySelectorAll('.tab-content');
-            const buttons = document.querySelectorAll('.tab-btn');
-            contents.forEach((c, i) => {
-                c.classList.toggle('active', i === index);
-                buttons[i].classList.toggle('active', i === index);
-            });
-            if(index === 0) {
-                setTimeout(() => { map.invalidateSize(); }, 200);
-            }
+        <!-- Tab 1: Map & Data -->
+        <div class="tab-content hidden" id="content1">
+            <h2 id="t1Head">الخريطة التفاعلية لحقول جازان</h2>
+            <p id="t1Desc">رصد مباشر لرطوبة التربة ومؤشرات الغطاء النباتي بناءً على بيانات الأقمار الصناعية.</p>
+            <div id="map"></div>
+        </div>
+
+        <!-- Tab 2: NASA Data -->
+        <div class="tab-content hidden" id="content2">
+            <h2 id="t2Head">NASA POWER & SMAP Data</h2>
+            <p id="t2Desc">دمج بيانات الإشعاع الشمسي، درجات الحرارة والرطوبة السطحية من وكالة ناسا.</p>
+            <ul>
+                <li id="t2li1">الإشعاع الشمسي اليومي: 6.2 كيلوواط ساعة/م²</li>
+                <li id="t2li2">درجة حرارة السطح: 31.2 درجة مئوية</li>
+                <li id="t2li3">معدل التبخر والتنصح المحسوب بدقة عالية</li>
+            </ul>
+        </div>
+
+        <!-- Tab 3: Crop Strategies -->
+        <div class="tab-content hidden" id="content3">
+            <h2 id="t3Head">استراتيجيات الحفاظ على المياه</h2>
+            <ul>
+                <li id="t3li1">تطبيق تقنيات الري الذكي المعتمده على استشعار الرطوبة الفضائية.</li>
+                <li id="t3li2">جدولة كميات المياه المضافة حسب معدلات النتح الفعلي للحقول.</li>
+                <li id="t3li3">تقليل الهدر المائي بنسبة تصل إلى 30% في الموسم الواحد.</li>
+            </ul>
+        </div>
+
+        <!-- Tab 4: Spatial Analytics -->
+        <div class="tab-content hidden" id="content4">
+            <h2 id="t4Head">التحليلات المكانية المتقدمة</h2>
+            <p id="t4Desc">تحليل التباين المكاني لصحة النباتات في سهول جازان الزراعية عبر النطاقات الطيفية المتعددة.</p>
+        </div>
+
+        <!-- Tab 5: Warnings -->
+        <div class="tab-content hidden" id="content5">
+            <h2 id="t5Head">التحذيرات الذكية (7 تنبيهات)</h2>
+            <ul>
+                <li id="t5li1">تحذير الإجهاد الحراري وارتفاع درجات الحرارة.</li>
+                <li id="t5li2">تنبيه انخفاض الرطوبة المفاجئ في نطاق الجذور.</li>
+                <li id="t5li3">مراقبة ملوحة التربة وتقلبات التبخر والتنصح.</li>
+            </ul>
+        </div>
+
+        <!-- Tab 6: Recommendations -->
+        <div class="tab-content hidden" id="content6">
+            <h2 id="t6Head">التوصيات العملية (7 توصيات)</h2>
+            <ul>
+                <li id="t6li1">جدولة الري خلال ساعات الصباح الباكر لتقليل الفاقد تبخراً.</li>
+                <li id="t6li2">تفعيل أنظمة التغطية العضوية للحفاظ على رطوبة التربة.</li>
+                <li id="t6li3">الاستفادة من تنبؤات ناسا للري المسبق قبل موجات الجفاف.</li>
+            </ul>
+        </div>
+
+        <!-- Tab 7: News -->
+        <div class="tab-content hidden" id="content7">
+            <h2 id="t7Head">آخر الأخبار والتحديثات</h2>
+            <p id="t7Desc">تم تحديث الخوارزميات المدمجة بنجاح وربط محطات الاستشعار الفضائي المباشر مع بيانات نينجا وناسا.</p>
+        </div>
+    </div>
+</div>
+
+<!-- Leaflet JS -->
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+<script>
+    // Initialize Map
+    let map = L.map('map').setView([16.8894, 42.5511], 10);
+    L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+        attribution: '&copy; OpenStreetMap contributors'
+    }).addTo(map);
+    L.marker([16.8894, 42.5511]).addTo(map).bindPopup('حقول جازان النموذجية - Agro-Spectra').openPopup();
+
+    // Tabs Logic
+    function switchTab(index) {
+        document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+        document.querySelectorAll('.tab-content').forEach(c => c.classList.add('hidden'));
+        
+        document.getElementById('tab' + index).classList.add('active');
+        document.getElementById('content' + index).classList.remove('hidden');
+
+        if(index === 1) {
+            setTimeout(() => { map.invalidateSize(); }, 200);
         }
+    }
 
-        // نظام اللغات (i18n مبسط)
-        let currentLang = 'ar';
-        const translations = {
-            ar: {
-                title: "Agro-Spectra | نظام الاستشعار الزراعي",
-                status: "NASA POWER API متصل",
-                t0: "الخريطة والبيانات",
-                t1: "نظرة عامة",
-                t2: "بيانات ناسا",
-                t3: "استراتيجيات المحاصيل",
-                t4: "الأثر البيئي",
-                t5: "التحليلات المكانية",
-                t6: "التحذيرات (7)",
-                t7: "التوصيات (7)",
-                mapHeader: "الخريطة التفاعلية لحقول جازان",
-                mapDesc: "رصد مباشر لرطوبة التربة ومؤشرات الغطاء النباتي بناءً على بيانات الأقمار الصناعية."
-            },
-            en: {
-                title: "Agro-Spectra | Agricultural Intelligence",
-                status: "NASA POWER API Connected",
-                t0: "Map & Data",
-                t1: "Overview",
-                t2: "NASA Data",
-                t3: "Crop Strategies",
-                t4: "Environmental Impact",
-                t5: "Spatial Analytics",
-                t6: "Warnings (7)",
-                t7: "Recommendations (7)",
-                mapHeader: "Jazan Fields Interactive Map",
-                mapDesc: "Real-time monitoring of soil moisture and vegetation indices using satellite data."
-            }
-        };
-
-        function toggleLanguage() {
-            currentLang = currentLang === 'ar' ? 'en' : 'ar';
-            const html = document.getElementById('htmlRoot');
-            html.setAttribute('lang', currentLang);
-            html.setAttribute('dir', currentLang === 'ar' ? 'rtl' : 'ltr');
+    // Translation Logic
+    let currentLang = 'ar';
+    function toggleLanguage() {
+        currentLang = currentLang === 'ar' ? 'en' : 'ar';
+        const btn = document.getElementById('langToggle');
+        
+        if(currentLang === 'en') {
+            document.documentElement.dir = 'ltr';
+            document.documentElement.lang = 'en';
+            btn.innerText = 'AR';
+            document.getElementById('mainTitle').innerText = 'Agro-Spectra | Agricultural Remote Sensing';
+            document.getElementById('subTitle').innerText = 'Team #8 | NASA Space Apps Jazan 2026';
+            document.getElementById('apiStatus').innerText = 'NASA POWER API Connected';
             
-            document.getElementById('langBtn').innerText = currentLang === 'ar' ? 'EN' : 'AR';
-            document.getElementById('titleText').innerText = translations[currentLang].title;
-            document.getElementById('nasaStatus').innerText = translations[currentLang].status;
-            document.getElementById('t0').innerText = translations[currentLang].t0;
-            document.getElementById('t1').innerText = translations[currentLang].t1;
-            document.getElementById('t2').innerText = translations[currentLang].t2;
-            document.getElementById('t3').innerText = translations[currentLang].t3;
-            document.getElementById('t4').innerText = translations[currentLang].t4;
-            document.getElementById('t5').innerText = translations[currentLang].t5;
-            document.getElementById('t6').innerText = translations[currentLang].t6;
-            document.getElementById('t7').innerText = translations[currentLang].t7;
-            document.getElementById('mapHeader').innerText = translations[currentLang].mapHeader;
-            document.getElementById('mapDesc').innerText = translations[currentLang].mapDesc;
+            // Tabs
+            document.getElementById('tab0').innerText = 'Overview';
+            document.getElementById('tab1').innerText = 'Map & Data';
+            document.getElementById('tab2').innerText = 'NASA Data';
+            document.getElementById('tab3').innerText = 'Crop Strategies';
+            document.getElementById('tab4').innerText = 'Spatial Analytics';
+            document.getElementById('tab5').innerText = 'Warnings';
+            document.getElementById('tab6').innerText = 'Recommendations';
+            document.getElementById('tab7').innerText = 'Latest News';
+
+            // Content 0
+            document.getElementById('t0Head').innerText = 'General Field Status';
+            document.getElementById('t0Opt').innerText = 'Optimal State';
+            document.getElementById('t0OptDesc').innerText = 'Growth and photosynthesis efficiency at peak';
+            document.getElementById('t0Soil').innerText = 'Current Soil Moisture: 24.5%';
+            document.getElementById('t0SoilDesc').innerText = 'Within safe range for root absorption';
+            document.getElementById('t0Ndvi').innerText = 'NDVI Index: 0.78 (Excellent)';
+            document.getElementById('t0NdviDesc').innerText = 'Based on satellite remote sensing data';
+
+            // Content 1
+            document.getElementById('t1Head').innerText = 'Interactive Map for Jazan Fields';
+            document.getElementById('t1Desc').innerText = 'Live monitoring of soil moisture and vegetation indices using satellite telemetry.';
+
+            // Content 2
+            document.getElementById('t2Head').innerText = 'NASA POWER & SMAP Data';
+            document.getElementById('t2Desc').innerText = 'Integrated solar irradiance, temperature, and surface moisture from NASA.';
+            document.getElementById('t2li1').innerText = 'Daily Solar Radiation: 6.2 kWh/m²';
+            document.getElementById('t2li2').innerText = 'Surface Temperature: 31.2 °C';
+            document.getElementById('t2li3').innerText = 'Calculated Evapotranspiration Rate';
+
+            // Content 3
+            document.getElementById('t3Head').innerText = 'Water Conservation Strategies';
+            document.getElementById('t3li1').innerText = 'Apply smart irrigation techniques based on space moisture sensing.';
+            document.getElementById('t3li2').innerText = 'Schedule water amounts according to actual field transpiration rates.';
+            document.getElementById('t3li3').innerText = 'Reduce water waste by up to 30% per season.';
+
+            // Content 4
+            document.getElementById('t4Head').innerText = 'Advanced Spatial Analytics';
+            document.getElementById('t4Desc').innerText = 'Spatial variance analysis of plant health across Jazan agricultural plains.';
+
+            // Content 5
+            document.getElementById('t5Head').innerText = 'Smart Warnings (7 Alerts)';
+            document.getElementById('t5li1').innerText = 'Heat stress and high temperature warning.';
+            document.getElementById('t5li2').innerText = 'Sudden drop in root-zone moisture alert.';
+            document.getElementById('t5li3').innerText = 'Soil salinity and evaporation fluctuation monitoring.';
+
+            // Content 6
+            document.getElementById('t6Head').innerText = 'Practical Recommendations (7)';
+            document.getElementById('t6li1').innerText = 'Schedule irrigation during early morning to reduce evaporation loss.';
+            document.getElementById('t6li2').innerText = 'Activate organic mulching systems to preserve soil moisture.';
+            document.getElementById('t6li3').innerText = 'Utilize NASA forecasts for pre-irrigation before drought waves.';
+
+            // Content 7
+            document.getElementById('t7Head').innerText = 'Latest News & Updates';
+            document.getElementById('t7Desc').innerText = 'Integrated algorithms successfully updated and satellite sensors linked with NASA data.';
+
+        } else {
+            location.reload(); // Quick reset back to Arabic default view
         }
-    </script>
+    }
+</script>
 </body>
 </html>
